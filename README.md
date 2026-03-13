@@ -21,6 +21,36 @@ Two AI bots with configurable personalities debate each other automatically — 
 
 ---
 
+## Why AI Dual Bot?
+
+A single AI is an echo chamber — it agrees with you, refines your framing, and hands your assumptions back polished. Two AIs locked in structured opposition are something different: genuine tension that surfaces arguments you hadn't considered, reveals the weakest links in your reasoning, and forces both sides to stay committed to their positions.
+
+### Use Cases
+
+**Before making a decision — stress-test your thinking**
+Set one bot to argue for your plan and the other to tear it apart. Watch what arguments emerge. The case you can't rebut is the risk you need to address.
+
+> *A founder setting one bot as "VC pushing for growth" and the other as "CFO demanding profitability" will surface the real trade-offs faster than any spreadsheet.*
+
+**Preparing for a difficult conversation**
+About to pitch investors, negotiate a contract, or propose a controversial change to your team? Configure the bots to simulate both sides and run the conversation in advance. Know what objections are coming before you're in the room.
+
+**Learning a new field through its core tensions**
+Every discipline has live debates that textbooks flatten into settled consensus. Pick two expert archetypes, set a contested topic, and watch how practitioners on each side actually argue — what evidence they cite, what they dismiss, where they talk past each other.
+
+> *A PM new to infrastructure debates can watch an Engineer and an AI Accelerationist argue about technical debt and come away understanding the actual stakes, not just the vocabulary.*
+
+**Auditing your own blind spots**
+If you already have a strong opinion, configure one bot to argue your position faithfully. Then watch it get challenged by the opposing bot. The moments where your position's bot struggles are the moments your own argument is weakest.
+
+**Generating structured content**
+Debate transcripts, dialogue-format articles, podcast scripts, explainer pieces that present genuine trade-offs — all are faster to produce when you start from a real AI-generated exchange rather than a blank page. Edit the output, don't write from scratch.
+
+**Team alignment before a meeting**
+Instead of going into a planning session where everyone holds unstated assumptions, run the core disagreement through the bots first. Share the transcript. The team arrives already having seen the best version of both arguments, and the meeting can start at synthesis rather than at "let me explain why I think..."
+
+---
+
 ## Quick Start
 
 ```bash
