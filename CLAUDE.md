@@ -30,7 +30,7 @@ No test framework is configured.
 - **`lib/chatOrchestrator.ts`** — Main loop: alternates bots, injects moderator messages, handles pause/abort, applies context windowing
 - **`lib/llmClient.ts`** — Streaming fetch client; parses OpenAI SSE format; supports both `content` and `reasoning_content` fields (for DeepSeek R1, o1-style models)
 - **`lib/parseThinking.ts`** — Streams `<think>...</think>` tag parsing; separates reasoning from response content
-- **`lib/presets.ts`** — 10 character presets (Einstein, Bohr, Socrates, Nietzsche, etc.) + scenario presets with auto-matching logic
+- **`lib/presets.ts`** — 10 character presets (VC, Bootstrapper, PM, Engineer, AI-bull, Journalist, Lawyer, Doctor, Economist, Educator) + 10 scenario presets with auto-matching logic
 - **`stores/chatStore.ts`** — Zustand store with localStorage persistence for bot configs, scenario, and settings (but not messages)
 - **`lib/types.ts`** — All shared TypeScript interfaces: `BotConfig`, `Message`, `ChatStatus`, `LLMConfig`
 
