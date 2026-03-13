@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { useTranslation } from '@/lib/i18n';
 
 interface MarkdownEditorProps {
   value: string;
@@ -11,6 +12,7 @@ interface MarkdownEditorProps {
 
 export default function MarkdownEditor({ value, onChange, placeholder, rows = 6 }: MarkdownEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslation();
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -21,7 +23,6 @@ export default function MarkdownEditor({ value, onChange, placeholder, rows = 6 
       onChange(text);
     };
     reader.readAsText(file);
-    // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -33,7 +34,7 @@ export default function MarkdownEditor({ value, onChange, placeholder, rows = 6 
           onClick={() => fileInputRef.current?.click()}
           className="text-xs text-blue-500 hover:text-blue-700 underline"
         >
-          上传 .md 文件
+          {t.editor.uploadButton}
         </button>
         <input
           ref={fileInputRef}

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { Message, BotConfig } from '@/lib/types';
 import MessageBubble from './MessageBubble';
+import { useTranslation } from '@/lib/i18n';
 
 interface ChatDisplayProps {
   messages: Message[];
@@ -13,6 +14,7 @@ interface ChatDisplayProps {
 
 export default function ChatDisplay({ messages, botA, botB, status }: ChatDisplayProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const t = useTranslation();
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -21,7 +23,7 @@ export default function ChatDisplay({ messages, botA, botB, status }: ChatDispla
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
-        {status === 'idle' ? '配置好 Bot 后点击「开始」开始对话' : '等待对话开始...'}
+        {status === 'idle' ? t.chat.idleHint : t.chat.waitingHint}
       </div>
     );
   }

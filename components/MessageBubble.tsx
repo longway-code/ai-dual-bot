@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Message } from '@/lib/types';
 import { ChevronRight, ChevronDown, Brain } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface MessageBubbleProps {
   message: Message;
@@ -12,6 +13,7 @@ interface MessageBubbleProps {
 
 export default function MessageBubble({ message, botName, isLeft }: MessageBubbleProps) {
   const [thinkingExpanded, setThinkingExpanded] = useState(false);
+  const t = useTranslation();
 
   return (
     <div className={`flex flex-col ${isLeft ? 'items-start' : 'items-end'} mb-4`}>
@@ -32,7 +34,7 @@ export default function MessageBubble({ message, botName, isLeft }: MessageBubbl
               className="flex items-center gap-1 px-3 py-2 w-full text-left hover:bg-black/5 transition-colors"
             >
               <Brain className="w-3 h-3 text-gray-400" />
-              <span className="text-gray-500 flex-1">思考过程</span>
+              <span className="text-gray-500 flex-1">{t.message.thinkingHeading}</span>
               {thinkingExpanded ? (
                 <ChevronDown className="w-3 h-3 text-gray-400" />
               ) : (
@@ -41,7 +43,7 @@ export default function MessageBubble({ message, botName, isLeft }: MessageBubbl
             </button>
             {thinkingExpanded && (
               <div className="px-3 pb-3 text-gray-600 dark:text-gray-400 whitespace-pre-wrap border-t border-current/10">
-                {message.thinking || (message.streaming ? '思考中...' : '')}
+                {message.thinking || (message.streaming ? t.message.thinkingPlaceholder : '')}
               </div>
             )}
           </div>

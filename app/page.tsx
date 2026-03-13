@@ -7,10 +7,13 @@ import BotConfigPanel from '@/components/BotConfigPanel';
 import ScenarioPanel from '@/components/ScenarioPanel';
 import ChatDisplay from '@/components/ChatDisplay';
 import ControlBar from '@/components/ControlBar';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation } from '@/lib/i18n';
 import { Settings, ChevronUp } from 'lucide-react';
 
 export default function Home() {
   const [configOpen, setConfigOpen] = useState(false);
+  const t = useTranslation();
 
   const {
     botA, botB, scenario, status, messages, currentRound,
@@ -42,22 +45,25 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center gap-3 shrink-0">
         <span className="text-xl">🤖</span>
-        <h1 className="font-bold text-lg text-gray-800 dark:text-gray-100">AI 双机器人对话</h1>
+        <h1 className="font-bold text-lg text-gray-800 dark:text-gray-100">{t.appTitle}</h1>
         <span className="text-xs text-gray-400 hidden sm:inline">
           {botA.name} × {botB.name}
         </span>
 
-        <button
-          onClick={() => setConfigOpen((v) => !v)}
-          className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-            configOpen
-              ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950 dark:border-blue-700 dark:text-blue-300'
-              : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
-          }`}
-        >
-          {configOpen ? <ChevronUp className="w-4 h-4" /> : <Settings className="w-4 h-4" />}
-          {configOpen ? '收起设置' : '展开设置'}
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <LanguageSwitcher />
+          <button
+            onClick={() => setConfigOpen((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+              configOpen
+                ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950 dark:border-blue-700 dark:text-blue-300'
+                : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+            }`}
+          >
+            {configOpen ? <ChevronUp className="w-4 h-4" /> : <Settings className="w-4 h-4" />}
+            {configOpen ? t.settings.close : t.settings.open}
+          </button>
+        </div>
       </header>
 
       {/* Collapsible config area */}

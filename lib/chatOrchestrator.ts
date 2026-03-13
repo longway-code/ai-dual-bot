@@ -1,6 +1,7 @@
 import { useChatStore } from '@/stores/chatStore';
 import { streamChat, buildMessages } from './llmClient';
 import { BotId } from './types';
+import { getTranslations } from './i18n';
 
 let abortController: AbortController | null = null;
 
@@ -42,9 +43,10 @@ export async function runChatLoop() {
 
     // If no history and Bot A is starting, add scenario as first user message
     if (state.messages.length === 0) {
+      const ot = getTranslations(state.locale);
       const userMsg = state.scenario
-        ? `情景开始：${state.scenario}\n\n请开始对话。`
-        : '请开始一段有趣的对话。';
+        ? ot.orchestrator.scenarioStart(state.scenario)
+        : ot.orchestrator.defaultStart;
       messages.push({ role: 'user', content: userMsg });
     }
 
@@ -81,7 +83,8 @@ export async function runChatLoop() {
 
     } catch (error) {
       console.error('Stream error:', error);
-      useChatStore.getState().appendContentDelta(msgId, `\n[错误: ${error instanceof Error ? error.message : String(error)}]`);
+      const et = getTranslations(useChatStore.getState().locale);
+      useChatStore.getState().appendContentDelta(msgId, et.orchestrator.errorPrefix(error instanceof Error ? error.message : String(error)));
       useChatStore.getState().finalizeMessage(msgId);
       useChatStore.getState().setStatus('paused');
       break;

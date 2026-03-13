@@ -1,3 +1,5 @@
+export type Locale = 'zh' | 'en';
+
 export interface LLMConfig {
   baseURL: string;
   apiKey: string;

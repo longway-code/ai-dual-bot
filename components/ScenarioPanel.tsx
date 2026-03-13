@@ -3,7 +3,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Map, Sparkles, Zap } from 'lucide-react';
 import MarkdownEditor from './MarkdownEditor';
-import { characterPresets, sortedScenarios, findMatchedScenario } from '@/lib/presets';
+import { getCharacterPresets, sortedScenarios, findMatchedScenario } from '@/lib/presets';
+import { useTranslation } from '@/lib/i18n';
+import { useChatStore } from '@/stores/chatStore';
 
 interface ScenarioPanelProps {
   value: string;
@@ -21,6 +23,21 @@ export default function ScenarioPanel({
   const [expanded, setExpanded] = useState(true);
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const t = useTranslation();
+  const locale = useChatStore((s) => s.locale);
+
+  const characterPresets = getCharacterPresets(locale);
+  const matched = findMatchedScenario(botAPresetId, botBPresetId, locale);
+  const sorted = sortedScenarios(botAPresetId, botBPresetId, locale);
+  const matchedGroup = sorted.filter(
+    (s) =>
+      s.characters &&
+      ((s.characters[0] === botAPresetId && s.characters[1] === botBPresetId) ||
+        (s.characters[0] === botBPresetId && s.characters[1] === botAPresetId))
+  );
+  const otherGroup = sorted.filter((s) => !matchedGroup.includes(s));
+
+  const isCurrentMatched = matched && value === matched.content;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -32,25 +49,16 @@ export default function ScenarioPanel({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [pickerOpen]);
 
-  const matched = findMatchedScenario(botAPresetId, botBPresetId);
-  const sorted = sortedScenarios(botAPresetId, botBPresetId);
-  const matchedGroup = sorted.filter(s => s.characters &&
-    ((s.characters[0] === botAPresetId && s.characters[1] === botBPresetId) ||
-     (s.characters[0] === botBPresetId && s.characters[1] === botAPresetId)));
-  const otherGroup = sorted.filter(s => !matchedGroup.includes(s));
-
-  const isCurrentMatched = matched && value === matched.content;
-
   return (
     <div className="border-2 border-purple-300 rounded-xl p-4 bg-purple-50 dark:bg-purple-950 dark:border-purple-700 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Map className="w-5 h-5 text-purple-600" />
-          <span className="font-bold text-lg text-purple-800 dark:text-purple-200">情景设定</span>
+          <span className="font-bold text-lg text-purple-800 dark:text-purple-200">{t.scenario.heading}</span>
           {isCurrentMatched && (
             <span className="flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded-full bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-200">
               <Zap className="w-2.5 h-2.5" />
-              已匹配
+              {t.scenario.matched}
             </span>
           )}
         </div>
@@ -59,11 +67,11 @@ export default function ScenarioPanel({
           <div className="relative" ref={pickerRef}>
             <button
               onClick={() => setPickerOpen(!pickerOpen)}
-              title="选择情景预设"
+              title={t.scenario.selectTooltip}
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-white/60 hover:bg-white/90 dark:bg-gray-700/60 dark:hover:bg-gray-700 transition-colors border border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300"
             >
               <Sparkles className="w-3 h-3" />
-              选情景
+              {t.scenario.selectButton}
             </button>
             {pickerOpen && (
               <div className="absolute right-0 top-8 z-50 w-60 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
@@ -71,9 +79,9 @@ export default function ScenarioPanel({
                   <>
                     <div className="px-3 py-2 text-xs font-semibold text-purple-500 uppercase tracking-wide border-b border-purple-100 dark:border-purple-900 bg-purple-50 dark:bg-purple-950 flex items-center gap-1">
                       <Zap className="w-3 h-3" />
-                      当前角色专属
+                      {t.scenario.exclusiveSection}
                     </div>
-                    {matchedGroup.map(preset => (
+                    {matchedGroup.map((preset) => (
                       <button
                         key={preset.id}
                         onClick={() => { onChange(preset.content); setPickerOpen(false); }}
@@ -88,10 +96,10 @@ export default function ScenarioPanel({
                 {otherGroup.length > 0 && (
                   <>
                     <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-gray-800 mt-0.5">
-                      其他情景
+                      {t.scenario.otherSection}
                     </div>
                     <div className="max-h-56 overflow-y-auto">
-                      {otherGroup.map(preset => (
+                      {otherGroup.map((preset) => (
                         <button
                           key={preset.id}
                           onClick={() => { onChange(preset.content); setPickerOpen(false); }}
@@ -102,9 +110,9 @@ export default function ScenarioPanel({
                             <div>{preset.label}</div>
                             {preset.characters && (
                               <div className="text-xs text-gray-400 truncate">
-                                {preset.characters.map(id =>
-                                  characterPresets.find(c => c.id === id)?.label ?? id
-                                ).join(' × ')}
+                                {preset.characters
+                                  .map((id) => characterPresets.find((c) => c.id === id)?.label ?? id)
+                                  .join(' × ')}
                               </div>
                             )}
                           </div>
@@ -126,13 +134,13 @@ export default function ScenarioPanel({
       {matched && !isCurrentMatched && (
         <div className="flex items-center justify-between rounded-lg px-3 py-2 bg-purple-100 dark:bg-purple-900 border border-purple-200 dark:border-purple-700 text-xs">
           <span className="text-purple-700 dark:text-purple-300">
-            {matched.emoji} 发现专属情景：<strong>{matched.label}</strong>
+            {matched.emoji} {t.scenario.matchedHint}<strong>{matched.label}</strong>
           </span>
           <button
             onClick={() => onChange(matched.content)}
             className="ml-2 px-2 py-0.5 rounded-md bg-purple-500 hover:bg-purple-600 text-white font-medium transition-colors"
           >
-            应用
+            {t.scenario.applyButton}
           </button>
         </div>
       )}
@@ -141,7 +149,7 @@ export default function ScenarioPanel({
         <MarkdownEditor
           value={value}
           onChange={onChange}
-          placeholder="描述对话的场景、背景、目标...（留空则由 Bot A 自由开场）"
+          placeholder={t.scenario.placeholder}
           rows={4}
         />
       )}

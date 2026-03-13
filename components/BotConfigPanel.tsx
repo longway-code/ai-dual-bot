@@ -4,7 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { BotId, BotConfig } from '@/lib/types';
 import MarkdownEditor from './MarkdownEditor';
 import { ChevronDown, ChevronUp, Bot, Sparkles, Check } from 'lucide-react';
-import { characterPresets } from '@/lib/presets';
+import { getCharacterPresets } from '@/lib/presets';
+import { useTranslation } from '@/lib/i18n';
+import { useChatStore } from '@/stores/chatStore';
 
 interface BotConfigPanelProps {
   botId: BotId;
@@ -27,6 +29,9 @@ export default function BotConfigPanel({
   const [showApiKey, setShowApiKey] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const t = useTranslation();
+  const locale = useChatStore((s) => s.locale);
+  const characterPresets = getCharacterPresets(locale);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -38,7 +43,7 @@ export default function BotConfigPanel({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [pickerOpen]);
 
-  const activePreset = characterPresets.find(p => p.id === activePresetId);
+  const activePreset = characterPresets.find((p) => p.id === activePresetId);
 
   return (
     <div className={`border-2 rounded-xl p-4 ${color} flex flex-col gap-3`}>
@@ -57,19 +62,19 @@ export default function BotConfigPanel({
           <div className="relative" ref={pickerRef}>
             <button
               onClick={() => setPickerOpen(!pickerOpen)}
-              title="选择角色预设"
+              title={t.botConfig.selectPresetTooltip}
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-white/60 hover:bg-white/90 dark:bg-gray-700/60 dark:hover:bg-gray-700 transition-colors border border-current/20"
             >
               <Sparkles className="w-3 h-3" />
-              {activePreset ? `${activePreset.emoji} ${activePreset.label}` : '选角色'}
+              {activePreset ? `${activePreset.emoji} ${activePreset.label}` : t.botConfig.selectPresetButton}
             </button>
             {pickerOpen && (
               <div className="absolute right-0 top-8 z-50 w-48 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
                 <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-gray-800">
-                  选择角色
+                  {t.botConfig.selectPresetHeading}
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {characterPresets.map(preset => (
+                  {characterPresets.map((preset) => (
                     <button
                       key={preset.id}
                       onClick={() => {
@@ -105,11 +110,13 @@ export default function BotConfigPanel({
       {expanded && (
         <div className="flex flex-col gap-3">
           <div>
-            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">性格设定 (Markdown)</label>
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+              {t.botConfig.personalityLabel}
+            </label>
             <MarkdownEditor
               value={config.personality}
               onChange={(v) => onChange({ personality: v })}
-              placeholder="描述这个 Bot 的性格、背景、说话风格..."
+              placeholder={t.botConfig.personalityPlaceholder}
               rows={4}
             />
           </div>
@@ -140,7 +147,7 @@ export default function BotConfigPanel({
                   onClick={() => setShowApiKey(!showApiKey)}
                   className="text-xs px-2 border rounded border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
                 >
-                  {showApiKey ? '隐藏' : '显示'}
+                  {showApiKey ? t.botConfig.apiKeyHide : t.botConfig.apiKeyShow}
                 </button>
               </div>
             </div>
@@ -169,9 +176,9 @@ export default function BotConfigPanel({
                 className="w-full accent-blue-500"
               />
               <div className="flex justify-between text-xs text-gray-400 mt-0.5">
-                <span>0 严谨</span>
-                <span>1 平衡</span>
-                <span>2 随机</span>
+                <span>{t.botConfig.tempPrecise}</span>
+                <span>{t.botConfig.tempBalanced}</span>
+                <span>{t.botConfig.tempCreative}</span>
               </div>
             </div>
           </div>
