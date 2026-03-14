@@ -13,7 +13,6 @@ Two AI bots with configurable personalities debate each other automatically — 
 - **Automatic dual-bot debate** — Bot A and Bot B alternate turns; built-in anti-convergence keeps the debate heated
 - **Streaming output** — Real-time token streaming; supports `<think>` tags and `reasoning_content` field (DeepSeek R1, o1-series)
 - **Character × Scenario presets** — 10 modern character archetypes (VC, Engineer, Lawyer, Journalist…) + 10 paired debate scenarios with auto-matching
-- **Optional moderator** — A third bot injects probing questions at configurable round intervals to break deadlocks
 - **Context window** — Configurable message history per turn to control token usage
 - **Any LLM** — Supports any OpenAI-compatible endpoint (OpenAI, DeepSeek, local Ollama, etc.); each bot can use a different model
 - **Persistent config** — Bot config and scenario saved to localStorage; survives page refresh
@@ -125,7 +124,7 @@ components/
   LanguageSwitcher.tsx  # EN ↔ 中文 toggle
 
 lib/
-  chatOrchestrator.ts   # Main loop: alternating turns, moderator injection, context window
+  chatOrchestrator.ts   # Main loop: alternating turns, context window
   llmClient.ts          # Streaming fetch, SSE parsing, reasoning_content support
   parseThinking.ts      # Real-time <think>...</think> stream parser
   presets.ts            # Bilingual character + scenario presets; locale-aware exports

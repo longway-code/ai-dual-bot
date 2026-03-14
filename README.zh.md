@@ -13,7 +13,6 @@
 - **双 Bot 自动辩论** — Bot A 和 Bot B 交替发言，内置反收敛机制让对话持续对立
 - **流式输出** — 实时 token 流，支持 `<think>` 标签和 `reasoning_content` 字段（DeepSeek R1、o1 系列）
 - **预设角色 × 情景** — 10 个现代角色（VC、工程师、律师、记者…）+ 10 个配对情景，选角色自动匹配辩题
-- **可选主持人** — 可配置一个主持 Bot，按轮数间隔注入追问，打破僵局
 - **上下文窗口** — 可调节每轮发送的消息数量，控制 token 用量
 - **任意 LLM** — 支持任何 OpenAI 兼容接口（OpenAI、DeepSeek、本地 Ollama 等），两个 Bot 可用不同模型
 - **配置持久化** — Bot 配置、情景通过 localStorage 保存，刷新不丢失
@@ -128,7 +127,7 @@ components/
   ControlBar.tsx        # 开始/暂停/重置 + 参数调节
 
 lib/
-  chatOrchestrator.ts   # 主循环：交替发言、注入主持消息、上下文窗口
+  chatOrchestrator.ts   # 主循环：交替发言、上下文窗口
   llmClient.ts          # 流式 fetch，解析 SSE + reasoning_content
   parseThinking.ts      # <think>...</think> 实时流式解析
   presets.ts            # 角色预设 + 情景预设 + 自动匹配逻辑

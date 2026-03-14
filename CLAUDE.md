@@ -15,7 +15,7 @@ No test framework is configured.
 
 ## Architecture
 
-**AI Dual Bot** is a Next.js app where two AI bots with configurable personalities automatically debate each other in real-time. The conversation alternates between Bot A and Bot B, with an optional moderator that injects probing questions at configurable intervals.
+**AI Dual Bot** is a Next.js app where two AI bots with configurable personalities automatically debate each other in real-time. The conversation alternates between Bot A and Bot B.
 
 ### Data Flow
 
@@ -27,7 +27,7 @@ No test framework is configured.
 
 ### Key Files
 
-- **`lib/chatOrchestrator.ts`** — Main loop: alternates bots, injects moderator messages, handles pause/abort, applies context windowing
+- **`lib/chatOrchestrator.ts`** — Main loop: alternates bots, handles pause/abort, applies context windowing
 - **`lib/llmClient.ts`** — Streaming fetch client; parses OpenAI SSE format; supports both `content` and `reasoning_content` fields (for DeepSeek R1, o1-style models)
 - **`lib/parseThinking.ts`** — Streams `<think>...</think>` tag parsing; separates reasoning from response content
 - **`lib/presets.ts`** — Bilingual (zh/en) character presets (VC, Bootstrapper, PM, Engineer, AI-bull, Journalist, Lawyer, Doctor, Economist, Educator) + 10 scenario presets; exports locale-aware `getCharacterPresets(locale)` and `getScenarioPresets(locale)` functions
