@@ -21,6 +21,10 @@ Two AI bots with configurable personalities debate each other automatically — 
 
 ---
 
+![Screenshot](public/screenshot.png)
+
+---
+
 ## Why AI Dual Bot?
 
 A single AI is an echo chamber — it agrees with you, refines your framing, and hands your assumptions back polished. Two AIs locked in structured opposition are something different: genuine tension that surfaces arguments you hadn't considered, reveals the weakest links in your reasoning, and forces both sides to stay committed to their positions.
