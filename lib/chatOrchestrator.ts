@@ -10,6 +10,10 @@ export function getAbortController() {
   return abortController;
 }
 
+function isAborted() {
+  return abortController?.signal.aborted ?? false;
+}
+
 export async function runChatLoop() {
   const store = useChatStore.getState();
   abortController = new AbortController();
@@ -66,58 +70,61 @@ export async function runChatLoop() {
     });
 
     try {
-      let toolCallHandled = false;
-
       // First stream pass
       for await (const chunk of streamChat(messages, currentBot.llm, searchEnabled)) {
-        const currentStatus = useChatStore.getState().status;
-        if (currentStatus !== 'running') {
+        if (useChatStore.getState().status !== 'running') {
           useChatStore.getState().finalizeMessage(msgId);
           return;
         }
 
         if (chunk.type === 'tool_call' && chunk.name === 'web_search') {
-          toolCallHandled = true;
           const t = getTranslations(useChatStore.getState().locale);
-
-          // Show "Searching..." status in the message
           useChatStore.getState().appendContentDelta(msgId, `[${t.search.searching}]`);
 
           let searchResult = '';
           try {
             const query = JSON.parse(chunk.arguments ?? '{}').query ?? '';
             console.log('[search] querying:', query);
-            searchResult = await fetchSearchContext(query, searchConfig);
+            // Pass abort signal so search is cancelled if user pauses/resets
+            searchResult = await fetchSearchContext(query, searchConfig, abortController?.signal);
             console.log('[search] result:', searchResult.slice(0, 100));
           } catch (err) {
+            if (isAborted()) {
+              useChatStore.getState().finalizeMessage(msgId);
+              return;
+            }
             console.error('[search] fetchSearchContext failed:', err);
             const t2 = getTranslations(useChatStore.getState().locale);
             useChatStore.getState().appendContentDelta(msgId, ` ${t2.search.searchFailed}.`);
           }
 
-          // Clear searching indicator from content before the real response
-          // by resetting and doing a second call with tool results injected
+          if (isAborted() || useChatStore.getState().status !== 'running') {
+            useChatStore.getState().finalizeMessage(msgId);
+            return;
+          }
+
+          // Build tool result messages using proper role: 'tool' format
+          const callId = chunk.toolCallId ?? 'call_0';
           const toolCallMessages = [
             ...messages,
             {
               role: 'assistant' as const,
               content: '',
-            },
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              tool_calls: [{ id: callId, type: 'function', function: { name: 'web_search', arguments: chunk.arguments ?? '{}' } }],
+            } as any, // OpenAI tool_calls field not in standard message type
             {
-              role: 'user' as const,
-              content: searchResult
-                ? `[搜索结果]\n${searchResult}`
-                : '[搜索无结果，请根据已有知识继续回答]',
-            },
+              role: 'tool' as const,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              tool_call_id: callId,
+              content: searchResult || '搜索无结果，请根据已有知识继续回答',
+            } as any,
           ];
 
-          // Reset message content (remove the searching indicator)
-          useChatStore.getState().appendContentDelta(msgId, '\n');
+          useChatStore.getState().resetMessageContent(msgId);
 
-          // Second stream pass with search result
           for await (const chunk2 of streamChat(toolCallMessages, currentBot.llm, false)) {
-            const status2 = useChatStore.getState().status;
-            if (status2 !== 'running') {
+            if (useChatStore.getState().status !== 'running') {
               useChatStore.getState().finalizeMessage(msgId);
               return;
             }
@@ -137,8 +144,6 @@ export async function runChatLoop() {
           useChatStore.getState().appendContentDelta(msgId, chunk.delta ?? '');
         }
       }
-
-      void toolCallHandled; // suppress unused warning
 
       useChatStore.getState().finalizeMessage(msgId);
       useChatStore.getState().incrementRound();

@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { useChatStore } from '@/stores/chatStore';
-import { runChatLoop } from '@/lib/chatOrchestrator';
+import { runChatLoop, getAbortController } from '@/lib/chatOrchestrator';
 import BotConfigPanel from '@/components/BotConfigPanel';
 import ScenarioPanel from '@/components/ScenarioPanel';
 import ChatDisplay from '@/components/ChatDisplay';
@@ -33,9 +33,13 @@ export default function Home() {
     }
   }, [setStatus]);
 
-  const handlePause = useCallback(() => setStatus('paused'), [setStatus]);
+  const handlePause = useCallback(() => {
+    getAbortController()?.abort();
+    setStatus('paused');
+  }, [setStatus]);
 
   const handleReset = useCallback(() => {
+    getAbortController()?.abort();
     setStatus('idle');
     resetChat();
   }, [setStatus, resetChat]);

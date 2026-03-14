@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       // Brave Search API — https://api.search.brave.com
       const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${maxResults}`;
       const res = await fetch(url, {
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(15000),
         headers: {
           'Accept': 'application/json',
           'Accept-Encoding': 'gzip',
@@ -33,17 +33,19 @@ export async function POST(req: NextRequest) {
         return new Response(`Brave Search error ${res.status}: ${body.slice(0, 200)}`, { status: res.status });
       }
       const data = await res.json();
-      const results = (data.web?.results ?? []).slice(0, maxResults);
-      summary = results
-        .map((r: { title: string; url: string; description: string }) =>
-          `${r.title}\n${r.url}\n${r.description}`)
+      type BraveResult = { title: string; url: string; description?: string; snippet?: string };
+      const webResults: BraveResult[] = data.web?.results ?? [];
+      const newsResults: BraveResult[] = data.news?.results ?? [];
+      const combined = [...webResults, ...newsResults].slice(0, maxResults);
+      summary = combined
+        .map((r) => `${r.title}\n${r.url}\n${r.description ?? r.snippet ?? ''}`)
         .join('\n\n');
-      console.log('[search] Brave result count:', results.length);
+      console.log('[search] Brave result count:', combined.length);
 
     } else if (provider === 'tavily') {
       const res = await fetch('https://api.tavily.com/search', {
         method: 'POST',
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(15000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ api_key: apiKey, query, max_results: maxResults }),
       });
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
       // Serper
       const res = await fetch('https://google.serper.dev/search', {
         method: 'POST',
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(15000),
         headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey },
         body: JSON.stringify({ q: query, num: maxResults }),
       });

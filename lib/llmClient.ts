@@ -6,6 +6,7 @@ export interface StreamChunk {
   delta?: string;
   name?: string;
   arguments?: string;
+  toolCallId?: string;
 }
 
 const WEB_SEARCH_TOOL = {
@@ -55,6 +56,7 @@ export async function* streamChat(
   // Accumulate tool call fragments across chunks
   let toolCallName = '';
   let toolCallArgs = '';
+  let toolCallId = '';
   let isToolCall = false;
 
   try {
@@ -88,6 +90,7 @@ export async function* streamChat(
           if (delta.tool_calls) {
             isToolCall = true;
             for (const tc of delta.tool_calls) {
+              if (tc.id) toolCallId = tc.id;
               if (tc.function?.name) {
                 toolCallName += tc.function.name;
                 console.log('[search] tool_call started:', tc.function.name);
@@ -100,7 +103,7 @@ export async function* streamChat(
           if (choice.finish_reason === 'tool_calls') {
             console.log('[search] finish_reason=tool_calls, name:', toolCallName, 'args:', toolCallArgs);
             if (toolCallName) {
-              yield { type: 'tool_call', name: toolCallName, arguments: toolCallArgs };
+              yield { type: 'tool_call', name: toolCallName, arguments: toolCallArgs, toolCallId };
             }
             return;
           }
@@ -121,7 +124,7 @@ export async function* streamChat(
 
     // Flush any remaining tool call (in case [DONE] was missed)
     if (isToolCall && toolCallName) {
-      yield { type: 'tool_call', name: toolCallName, arguments: toolCallArgs };
+      yield { type: 'tool_call', name: toolCallName, arguments: toolCallArgs, toolCallId };
     }
   } finally {
     reader.releaseLock();

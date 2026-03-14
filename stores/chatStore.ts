@@ -36,6 +36,7 @@ interface ChatStore {
   addMessage: (msg: Message) => void;
   appendThinkingDelta: (id: string, delta: string) => void;
   appendContentDelta: (id: string, delta: string) => void;
+  resetMessageContent: (id: string) => void;
   finalizeMessage: (id: string) => void;
   resetChat: () => void;
   incrementRound: () => void;
@@ -134,6 +135,13 @@ export const useChatStore = create<ChatStore>()(
         set((state) => ({
           messages: state.messages.map((m) =>
             m.id === id ? { ...m, content: m.content + delta } : m
+          ),
+        })),
+
+      resetMessageContent: (id) =>
+        set((state) => ({
+          messages: state.messages.map((m) =>
+            m.id === id ? { ...m, content: '', thinking: undefined } : m
           ),
         })),
 

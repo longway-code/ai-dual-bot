@@ -1,8 +1,9 @@
 import { SearchConfig } from './types';
 
-export async function fetchSearchContext(query: string, config: SearchConfig): Promise<string> {
+export async function fetchSearchContext(query: string, config: SearchConfig, signal?: AbortSignal): Promise<string> {
   const res = await fetch('/api/search', {
     method: 'POST',
+    signal,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       query,
