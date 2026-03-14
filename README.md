@@ -12,6 +12,7 @@ Two AI bots with configurable personalities debate each other automatically — 
 
 - **Automatic dual-bot debate** — Bot A and Bot B alternate turns; built-in anti-convergence keeps the debate heated
 - **Streaming output** — Real-time token streaming; supports `<think>` tags and `reasoning_content` field (DeepSeek R1, o1-series)
+- **On-demand web search** — Bots call a `web_search` tool mid-debate via LLM native tool calling; supports Brave Search, Tavily, and Serper
 - **Character × Scenario presets** — 10 modern character archetypes (VC, Engineer, Lawyer, Journalist…) + 10 paired debate scenarios with auto-matching
 - **Context window** — Configurable message history per turn to control token usage
 - **Any LLM** — Supports any OpenAI-compatible endpoint (OpenAI, DeepSeek, local Ollama, etc.); each bot can use a different model
@@ -98,12 +99,37 @@ Selecting two characters **automatically matches** the paired scenario (e.g. VC 
 
 ---
 
+## Web Search
+
+Bots can search the web mid-debate using LLM native tool calling. When enabled, the model decides autonomously when to call `web_search` — typically when it needs recent news, statistics, or policy updates to support its argument.
+
+**Turn flow with search:**
+```
+Build messages (with web_search tool definition)
+  → streamChat() → finish_reason: "tool_calls"?
+      ├─ YES: fetch /api/search → inject result → second streamChat() → final answer
+      └─ NO:  normal streaming response
+```
+
+**Supported providers** (all require an API key):
+
+| Provider | Free tier | Notes |
+|---|---|---|
+| **Brave Search** | 2,000 req/month | Real web search, reliable from server environments |
+| **Tavily** | 1,000 req/month | AI-optimised, structured summaries, best quality |
+| **Serper** | 2,500 req/month | Google results wrapper |
+
+Enable in the **Web Search** row at the bottom of the control bar. Requires a model that supports function calling (GPT-4o, DeepSeek V3, Qwen2.5, etc.). If the model doesn't support tool calling, the debate continues normally without search.
+
+---
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router), Edge Runtime API route
 - **UI**: React 19 + Tailwind CSS 4 + Radix UI + Lucide icons
 - **State**: Zustand 5 with localStorage persistence
-- **LLM**: Native `fetch` + OpenAI SSE stream parsing; supports `reasoning_content` field
+- **LLM**: Native `fetch` + OpenAI SSE stream parsing; supports `reasoning_content` field and tool calling
+- **Web search**: Server-side Edge route proxies search requests (Brave / Tavily / Serper); avoids browser CORS restrictions
 - **i18n**: Lightweight translation dictionary in `lib/i18n.ts`; locale stored in Zustand
 - **TypeScript**: v5, strict mode
 
@@ -114,25 +140,27 @@ Selecting two characters **automatically matches** the paired scenario (e.g. VC 
 ```
 app/
   page.tsx              # Root page — assembles all components
-  api/chat/route.ts     # Edge route — proxies LLM requests
+  api/chat/route.ts     # Edge route — proxies LLM requests (forwards tools field)
+  api/search/route.ts   # Edge route — proxies web search (Brave / Tavily / Serper)
 
 components/
   BotConfigPanel.tsx    # Bot config panel (includes character preset picker)
   ScenarioPanel.tsx     # Scenario panel (includes auto-match logic)
   ChatDisplay.tsx       # Message stream display
-  ControlBar.tsx        # Start / Pause / Reset + parameter controls
+  ControlBar.tsx        # Start / Pause / Reset + parameter controls + web search toggle
   LanguageSwitcher.tsx  # EN ↔ 中文 toggle
 
 lib/
-  chatOrchestrator.ts   # Main loop: alternating turns, context window
-  llmClient.ts          # Streaming fetch, SSE parsing, reasoning_content support
+  chatOrchestrator.ts   # Main loop: alternating turns, context window, tool call handling
+  llmClient.ts          # Streaming fetch, SSE parsing, tool_calls delta accumulation
+  searchClient.ts       # fetchSearchContext() — calls /api/search
   parseThinking.ts      # Real-time <think>...</think> stream parser
   presets.ts            # Bilingual character + scenario presets; locale-aware exports
   i18n.ts               # Translation dictionary + useTranslation hook
-  types.ts              # Shared TypeScript interfaces
+  types.ts              # Shared TypeScript interfaces (includes SearchConfig)
 
 stores/
-  chatStore.ts          # Zustand store — drives all UI reactivity
+  chatStore.ts          # Zustand store — drives all UI reactivity (includes searchConfig)
 ```
 
 ---

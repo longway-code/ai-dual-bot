@@ -4,7 +4,7 @@ export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, llmConfig } = await req.json();
+    const { messages, llmConfig, tools } = await req.json();
 
     if (!llmConfig?.baseURL || !llmConfig?.apiKey || !llmConfig?.model) {
       return new Response('Missing LLM configuration', { status: 400 });
@@ -13,19 +13,25 @@ export async function POST(req: NextRequest) {
     const baseURL = llmConfig.baseURL.replace(/\/$/, '');
     const apiURL = `${baseURL}/chat/completions`;
 
+    const requestBody: Record<string, unknown> = {
+      model: llmConfig.model,
+      messages,
+      stream: true,
+      max_tokens: 1000,
+      temperature: llmConfig.temperature ?? 0.8,
+    };
+    if (tools && tools.length > 0) {
+      requestBody.tools = tools;
+      requestBody.tool_choice = 'auto';
+    }
+
     const upstream = await fetch(apiURL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${llmConfig.apiKey}`,
       },
-      body: JSON.stringify({
-        model: llmConfig.model,
-        messages,
-        stream: true,
-        max_tokens: 1000,
-        temperature: llmConfig.temperature ?? 0.8,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!upstream.ok) {

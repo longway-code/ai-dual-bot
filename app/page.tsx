@@ -17,10 +17,10 @@ export default function Home() {
 
   const {
     botA, botB, scenario, status, messages, currentRound,
-    maxRounds, maxMessagesInContext,
+    maxRounds, maxMessagesInContext, searchConfig,
     botAPresetId, botBPresetId,
     setBotConfig, applyCharacterPreset, setScenario, setStatus, setMaxRounds,
-    setMaxMessagesInContext, resetChat,
+    setMaxMessagesInContext, setSearchConfig, resetChat,
   } = useChatStore();
 
   const handleStart = useCallback(async () => {
@@ -110,11 +110,13 @@ export default function Home() {
         currentRound={currentRound}
         maxRounds={maxRounds}
         maxMessagesInContext={maxMessagesInContext}
+        searchConfig={searchConfig}
         onStart={handleStart}
         onPause={handlePause}
         onReset={handleReset}
         onMaxRoundsChange={setMaxRounds}
         onMaxContextChange={setMaxMessagesInContext}
+        onSearchConfigChange={setSearchConfig}
       />
     </div>
   );

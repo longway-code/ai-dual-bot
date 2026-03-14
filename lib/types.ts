@@ -33,3 +33,10 @@ export interface ChatState {
   maxRounds: number; // 0 = unlimited
   maxMessagesInContext: number;
 }
+
+export interface SearchConfig {
+  enabled: boolean;
+  provider: 'brave' | 'tavily' | 'serper';
+  apiKey: string;
+  maxResults: number;
+}

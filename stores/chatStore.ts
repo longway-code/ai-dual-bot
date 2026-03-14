@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { BotConfig, Message, ChatStatus, BotId, Locale } from '@/lib/types';
+import { BotConfig, Message, ChatStatus, BotId, Locale, SearchConfig } from '@/lib/types';
 import { findMatchedScenario, getCharacterPresets, getScenarioPresets } from '@/lib/presets';
 
 interface ChatStore {
@@ -21,6 +21,10 @@ interface ChatStore {
   currentRound: number;
   maxRounds: number;
   maxMessagesInContext: number;
+
+  // Search
+  searchConfig: SearchConfig;
+  setSearchConfig: (config: Partial<SearchConfig>) => void;
 
   // Actions
   setBotConfig: (botId: BotId, config: Partial<BotConfig>) => void;
@@ -67,6 +71,12 @@ export const useChatStore = create<ChatStore>()(
       scenario: defaultScenario.content,
       botAPresetId: 'vc',
       botBPresetId: 'bootstrapper',
+      searchConfig: {
+        enabled: false,
+        provider: 'brave',
+        apiKey: '',
+        maxResults: 3,
+      },
       status: 'idle',
       messages: [],
       currentRound: 0,
@@ -74,6 +84,8 @@ export const useChatStore = create<ChatStore>()(
       maxMessagesInContext: 20,
 
       setLocale: (locale) => set({ locale }),
+      setSearchConfig: (config) =>
+        set((state) => ({ searchConfig: { ...state.searchConfig, ...config } })),
 
       setBotConfig: (botId, config) =>
         set((state) => ({
@@ -150,6 +162,7 @@ export const useChatStore = create<ChatStore>()(
         botBPresetId: state.botBPresetId,
         maxRounds: state.maxRounds,
         maxMessagesInContext: state.maxMessagesInContext,
+        searchConfig: state.searchConfig,
       }),
     }
   )

@@ -12,6 +12,7 @@
 
 - **双 Bot 自动辩论** — Bot A 和 Bot B 交替发言，内置反收敛机制让对话持续对立
 - **流式输出** — 实时 token 流，支持 `<think>` 标签和 `reasoning_content` 字段（DeepSeek R1、o1 系列）
+- **按需联网搜索** — 基于 LLM 原生 Tool Calling，Bot 在辩论过程中自主决定何时调用 `web_search`；支持 Brave Search、Tavily、Serper
 - **预设角色 × 情景** — 10 个现代角色（VC、工程师、律师、记者…）+ 10 个配对情景，选角色自动匹配辩题
 - **上下文窗口** — 可调节每轮发送的消息数量，控制 token 用量
 - **任意 LLM** — 支持任何 OpenAI 兼容接口（OpenAI、DeepSeek、本地 Ollama 等），两个 Bot 可用不同模型
@@ -103,12 +104,37 @@ npm run dev
 
 ---
 
+## 联网搜索
+
+Bot 在辩论过程中可通过 LLM 原生 Tool Calling 按需搜索网络。开启后，模型自主判断何时调用 `web_search`——通常在需要引用近期新闻、数据或政策时触发。
+
+**带搜索的轮次流程：**
+```
+构建消息（含 web_search 工具定义）
+  → streamChat() → finish_reason: "tool_calls"?
+      ├─ 是：调用 /api/search → 注入结果 → 第二次 streamChat() → 最终回答
+      └─ 否：正常流式输出
+```
+
+**支持的搜索服务**（均需 API Key）：
+
+| 服务 | 免费额度 | 说明 |
+|---|---|---|
+| **Brave Search** | 2000次/月 | 真实 Web 搜索，服务端环境稳定 |
+| **Tavily** | 1000次/月 | AI 专项优化，结构化摘要，质量最佳 |
+| **Serper** | 2500次/月 | Google 结果封装 |
+
+在控制栏底部的**联网搜索**行启用。需要模型支持 Function Calling（GPT-4o、DeepSeek V3、Qwen2.5 等）。若模型不支持，辩论正常继续，搜索步骤静默跳过。
+
+---
+
 ## 技术栈
 
 - **框架**：Next.js 16 (App Router)，Edge Runtime API 路由
 - **UI**：React 19 + Tailwind CSS 4 + Radix UI + Lucide
 - **状态管理**：Zustand 5，localStorage 持久化
-- **LLM 接入**：原生 `fetch` + OpenAI SSE 流解析，支持 `reasoning_content` 字段
+- **LLM 接入**：原生 `fetch` + OpenAI SSE 流解析，支持 `reasoning_content` 字段和 Tool Calling
+- **联网搜索**：服务端 Edge 路由代理搜索请求（Brave / Tavily / Serper），规避浏览器 CORS 限制
 - **类型系统**：TypeScript 5，严格模式
 
 ---
@@ -118,23 +144,25 @@ npm run dev
 ```
 app/
   page.tsx              # 主页，组装所有组件
-  api/chat/route.ts     # Edge 路由，代理 LLM 请求
+  api/chat/route.ts     # Edge 路由，代理 LLM 请求（透传 tools 字段）
+  api/search/route.ts   # Edge 路由，代理搜索请求（Brave / Tavily / Serper）
 
 components/
   BotConfigPanel.tsx    # Bot 配置面板（含角色预设选择）
   ScenarioPanel.tsx     # 情景配置面板（含自动匹配）
   ChatDisplay.tsx       # 消息流展示
-  ControlBar.tsx        # 开始/暂停/重置 + 参数调节
+  ControlBar.tsx        # 开始/暂停/重置 + 参数调节 + 联网搜索开关
 
 lib/
-  chatOrchestrator.ts   # 主循环：交替发言、上下文窗口
-  llmClient.ts          # 流式 fetch，解析 SSE + reasoning_content
+  chatOrchestrator.ts   # 主循环：交替发言、上下文窗口、tool_call 处理
+  llmClient.ts          # 流式 fetch，解析 SSE + tool_calls delta 累积
+  searchClient.ts       # fetchSearchContext()，调用 /api/search
   parseThinking.ts      # <think>...</think> 实时流式解析
   presets.ts            # 角色预设 + 情景预设 + 自动匹配逻辑
-  types.ts              # 共享类型定义
+  types.ts              # 共享类型定义（含 SearchConfig）
 
 stores/
-  chatStore.ts          # Zustand store，驱动所有 UI 响应
+  chatStore.ts          # Zustand store，驱动所有 UI 响应（含 searchConfig）
 ```
 
 ---
