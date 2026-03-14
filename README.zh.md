@@ -15,7 +15,7 @@
 - **按需联网搜索** — 基于 LLM 原生 Tool Calling，Bot 在辩论过程中自主决定何时调用 `web_search`；支持 Brave Search、Tavily、Serper
 - **预设角色 × 情景** — 10 个现代角色（VC、工程师、律师、记者…）+ 10 个配对情景，选角色自动匹配辩题
 - **上下文窗口** — 可调节每轮发送的消息数量，控制 token 用量
-- **任意 LLM** — 支持任何 OpenAI 兼容接口（OpenAI、DeepSeek、本地 Ollama 等），两个 Bot 可用不同模型
+- **任意 LLM** — 支持任何 OpenAI 兼容接口（OpenAI、DeepSeek、本地 Ollama 等）以及 Anthropic 原生 API（Claude）；两个 Bot 可用不同模型
 - **配置持久化** — Bot 配置、情景通过 localStorage 保存，刷新不丢失
 - **中英文界面** — 点击右上角语言切换按钮，UI 即时切换为中文或英文
 
@@ -75,7 +75,7 @@ npm run dev
 
 | 字段 | 说明 |
 |---|---|
-| **Base URL** | OpenAI 兼容接口地址，默认 `https://api.openai.com/v1` |
+| **Base URL** | 接口地址。OpenAI 兼容默认：`https://api.openai.com/v1`；Anthropic（Claude）填 `https://api.anthropic.com`，协议自动识别。 |
 | **API Key** | 对应接口的 Key（仅存在浏览器本地，不经过服务端） |
 | **Model** | 模型名，如 `gpt-4o`、`deepseek-reasoner`、`llama3` |
 | **Temperature** | 生成随机性，推荐 0.7–1.0 |
@@ -133,7 +133,7 @@ Bot 在辩论过程中可通过 LLM 原生 Tool Calling 按需搜索网络。开
 - **框架**：Next.js 16 (App Router)，Edge Runtime API 路由
 - **UI**：React 19 + Tailwind CSS 4 + Radix UI + Lucide
 - **状态管理**：Zustand 5，localStorage 持久化
-- **LLM 接入**：原生 `fetch` + OpenAI SSE 流解析，支持 `reasoning_content` 字段和 Tool Calling
+- **LLM 接入**：原生 `fetch`；支持 OpenAI 兼容 SSE 和 Anthropic 原生 API（服务端在 `/api/chat` 做协议归一化）；支持 `reasoning_content` 和 Tool Calling
 - **联网搜索**：服务端 Edge 路由代理搜索请求（Brave / Tavily / Serper），规避浏览器 CORS 限制
 - **类型系统**：TypeScript 5，严格模式
 
@@ -144,7 +144,7 @@ Bot 在辩论过程中可通过 LLM 原生 Tool Calling 按需搜索网络。开
 ```
 app/
   page.tsx              # 主页，组装所有组件
-  api/chat/route.ts     # Edge 路由，代理 LLM 请求（透传 tools 字段）
+  api/chat/route.ts     # Edge 路由，代理 LLM 请求；自动识别 Anthropic / OpenAI 协议并归一化
   api/search/route.ts   # Edge 路由，代理搜索请求（Brave / Tavily / Serper）
 
 components/

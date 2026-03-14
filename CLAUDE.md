@@ -22,13 +22,13 @@ No test framework is configured.
 1. User configures two bots (name, personality, LLM endpoint/model) via `BotConfigPanel`
 2. User starts the chat via `ControlBar` → triggers `runChatLoop()` in `lib/chatOrchestrator.ts`
 3. Orchestrator alternates turns: builds message history → calls `lib/llmClient.ts` → streams tokens to store
-4. `app/api/chat/route.ts` (Edge runtime) proxies LLM requests to any OpenAI-compatible API
+4. `app/api/chat/route.ts` (Edge runtime) proxies LLM requests; auto-detects Anthropic vs OpenAI protocol from `baseURL` and normalises the request/response on the server side
 5. Zustand store (`stores/chatStore.ts`) drives all UI reactivity; messages are NOT persisted
 
 ### Key Files
 
 - **`lib/chatOrchestrator.ts`** — Main loop: alternates bots, handles pause/abort, applies context windowing
-- **`lib/llmClient.ts`** — Streaming fetch client; parses OpenAI SSE format; supports both `content` and `reasoning_content` fields (for DeepSeek R1, o1-style models)
+- **`lib/llmClient.ts`** — Streaming fetch client; parses OpenAI SSE format; supports both `content` and `reasoning_content` fields (for DeepSeek R1, o1-style models); injects current date/time into system prompt for accurate search queries
 - **`lib/parseThinking.ts`** — Streams `<think>...</think>` tag parsing; separates reasoning from response content
 - **`lib/presets.ts`** — Bilingual (zh/en) character presets (VC, Bootstrapper, PM, Engineer, AI-bull, Journalist, Lawyer, Doctor, Economist, Educator) + 10 scenario presets; exports locale-aware `getCharacterPresets(locale)` and `getScenarioPresets(locale)` functions
 - **`lib/i18n.ts`** — Full UI translation dictionary for `zh` and `en`; exports `useTranslation()` hook and `getTranslations(locale)` function
@@ -46,4 +46,8 @@ No test framework is configured.
 
 ### LLM API
 
-The `/api/chat` route accepts `{ messages, config }` where `config` is `LLMConfig` (`baseURL`, `apiKey`, `model`, `temperature`). It forwards streaming SSE responses directly to the client. Supports any OpenAI-compatible endpoint.
+The `/api/chat` route accepts `{ messages, llmConfig, tools }` where `llmConfig` is `LLMConfig` (`baseURL`, `apiKey`, `model`, `temperature`). Protocol is auto-detected from `baseURL`:
+- **OpenAI-compatible** (default): request forwarded as-is; SSE stream passed through directly
+- **Anthropic** (`baseURL` contains `anthropic.com` or `/anthropic` path): request converted to Anthropic format (`/v1/messages`, `x-api-key` header, system extracted, tool format converted); Anthropic SSE events normalised back to OpenAI format before sending to client
+
+All protocol conversion is contained in `app/api/chat/route.ts`; `llmClient.ts` always sees OpenAI-format SSE.

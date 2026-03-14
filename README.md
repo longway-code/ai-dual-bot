@@ -15,7 +15,7 @@ Two AI bots with configurable personalities debate each other automatically — 
 - **On-demand web search** — Bots call a `web_search` tool mid-debate via LLM native tool calling; supports Brave Search, Tavily, and Serper
 - **Character × Scenario presets** — 10 modern character archetypes (VC, Engineer, Lawyer, Journalist…) + 10 paired debate scenarios with auto-matching
 - **Context window** — Configurable message history per turn to control token usage
-- **Any LLM** — Supports any OpenAI-compatible endpoint (OpenAI, DeepSeek, local Ollama, etc.); each bot can use a different model
+- **Any LLM** — Supports any OpenAI-compatible endpoint (OpenAI, DeepSeek, local Ollama, etc.) and the native Anthropic API (Claude); each bot can use a different model
 - **Persistent config** — Bot config and scenario saved to localStorage; survives page refresh
 - **i18n** — UI supports English and Chinese; switch with the language toggle in the header
 
@@ -70,7 +70,7 @@ Each bot is configured independently.
 
 | Field | Description |
 |---|---|
-| **Base URL** | OpenAI-compatible endpoint, default `https://api.openai.com/v1` |
+| **Base URL** | API endpoint. OpenAI-compatible default: `https://api.openai.com/v1`. For Anthropic (Claude): `https://api.anthropic.com` — the protocol is detected automatically. |
 | **API Key** | API key for the endpoint (stored only in the browser, never sent to any backend) |
 | **Model** | Model name, e.g. `gpt-4o`, `deepseek-reasoner`, `llama3` |
 | **Temperature** | Generation randomness, recommended 0.7–1.0 |
@@ -128,7 +128,7 @@ Enable in the **Web Search** row at the bottom of the control bar. Requires a mo
 - **Framework**: Next.js 16 (App Router), Edge Runtime API route
 - **UI**: React 19 + Tailwind CSS 4 + Radix UI + Lucide icons
 - **State**: Zustand 5 with localStorage persistence
-- **LLM**: Native `fetch` + OpenAI SSE stream parsing; supports `reasoning_content` field and tool calling
+- **LLM**: Native `fetch`; supports OpenAI-compatible SSE and native Anthropic API (server-side protocol normalisation in `/api/chat`); `reasoning_content` and tool calling
 - **Web search**: Server-side Edge route proxies search requests (Brave / Tavily / Serper); avoids browser CORS restrictions
 - **i18n**: Lightweight translation dictionary in `lib/i18n.ts`; locale stored in Zustand
 - **TypeScript**: v5, strict mode
@@ -140,7 +140,7 @@ Enable in the **Web Search** row at the bottom of the control bar. Requires a mo
 ```
 app/
   page.tsx              # Root page — assembles all components
-  api/chat/route.ts     # Edge route — proxies LLM requests (forwards tools field)
+  api/chat/route.ts     # Edge route — proxies LLM requests; auto-detects Anthropic vs OpenAI protocol
   api/search/route.ts   # Edge route — proxies web search (Brave / Tavily / Serper)
 
 components/
