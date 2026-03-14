@@ -161,8 +161,13 @@ export function buildMessages(
     roundHints.push(`【请引入全新角度或极端案例来测试你的立场】`);
   }
 
+  const now = new Date();
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const dateStr = now.toLocaleString('en-CA', { hour12: false }) + ` (${tz})`;
+
   const systemPrompt = [
     `你是 ${currentBot.name}。`,
+    `\n当前日期时间：${dateStr}`,
     currentBot.personality ? `\n## 你的性格与背景\n${currentBot.personality}` : '',
     `\n## 对话设定`,
     `你正在与 ${otherBot.name} 进行对话。`,
